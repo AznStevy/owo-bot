@@ -1,0 +1,25 @@
+{
+    "badge_type" : "circles",
+    "bg_default" : {
+        "levelup" : {
+            "price" : 500
+        },
+        "profile" : {
+            "price" : 2000
+        },
+        "rank" : {
+            "price" : 1000
+        }
+    },
+    "chat_cooldown" : 120,
+    "mention" : true,
+    "msg_credits" : [
+        1,
+        3
+    ],
+    "msg_exp" : [
+        15,
+        20
+    ],
+    "rep_cooldown" : 43200
+}

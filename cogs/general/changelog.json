@@ -1,0 +1,40 @@
+{
+	"3.5.0": {
+		"osu": [
+			"Improved caching system + decreased cooldowns",
+			"Changed `-p` for play number to `-i` for index (starting from 1) (i.e. `>osutop -i 10`)",
+			"Partial support for 8+ other private servers. Check in `>botinfo` command.",
+			"New `>osu -d` and `>osu -s` commands for bancho",
+			"New `-10` (condensed) / `-nc` (no-choke) option for top.",
+			"New `>osutop` sorting and search commands. View using `>h osutop`.",
+			"Commands like `>rs mania` will be now be `>rs -mania`.",
+			"Map search feature. `>map -? \"search terms here\"`",
+			"Map feed feature, `>mapfeed`.",
+			"Improved pp calculation for non-std modes",
+			"Changed beatmap download mirrors.",
+			"New supporter feature that generates score image.",
+			"Many more additions. Use the `>help (command)` function to see all options.",
+			"Url and screenshot detection re-enabled.",
+			"Added recomendations for other modes, albeit with limited selection. e.g. `>r -m 3`",
+			"Added forced username option (`-u`) to ignore discord users.",
+			"The `>track clear` command has been changed to `>track remove -a`."
+		],
+		"general": [
+			"Added `>changelog` command.",
+			"Updated `>userinfo` and `serverinfo` commands."
+		],
+		"fun": [
+			"Added more images to reaction commands."
+		],
+		"economy": [
+			"Fixed blackjack (`>blackjack`) and made card games image-based."
+		],
+		"settings": [
+			"Updated `>overview` function to display current settings."
+		],
+		"other": [
+			"Updated sharding scheme for bot and database",
+			"TBA"
+		]
+	}
+}

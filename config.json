@@ -1,0 +1,49 @@
+{
+    "owner" : "never",
+    "prefix" : [
+        ">"
+    ],
+    "shard_count": 1,
+    "bot_name": "owo_osu_bot",
+    "token" : "gonna",
+    "client_id": "give you up",
+    "description": "owo! - An osu! Discord bot by Stevy",
+    "API_KEYS": {
+        "WOLFRAM_API_KEY": "never",
+        "YOUTUBE": "gonna",
+        "OSU": {
+            "OFFICIAL": {
+                "KEY": "let you",
+                "CLIENT_ID": "down",
+                "CLIENT_SECRET": "never",
+                "USERNAME": "gonna",
+                "PASSWORD": "run around and"
+            },
+            "DROID": {
+                "KEY" : "desert you"
+            },
+            "BEATCONNECT": {
+                "KEY": "never gonna make"
+            }
+        },
+        "BANCHO": {
+            "USERNAME": "you cry",
+            "PASSWORD": "never gonna say"
+        },
+        "PATREON": {
+            "CLIENT_ID": "goodbye",
+            "CLIENT_SECRET": "never gonna tell",
+            "ACCESS_TOKEN": "a lie",
+            "REFRESH_TOKEN": "and hurt you"
+        }
+    },
+    "settings":{
+        "production": true,
+        "osu": {
+            "cache" : true
+        }
+    },
+    "database": {
+        "primary": 27017
+    }
+}

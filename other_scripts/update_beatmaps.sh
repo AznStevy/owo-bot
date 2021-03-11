@@ -1,0 +1,17 @@
+#!/bin/bash
+bot_dir=""
+filename=""
+filename_zip="${filename}.tar.bz2"
+urlname="https://data.ppy.sh/${filename_zip}"
+echo "Downloading file from ${urlname}"
+
+outputdir="$HOME/${bot_dir}/other_scripts"
+full_zip_output_path="${outputdir}/${filename_zip}"
+full_folder_output_path="${outputdir}/${filename}/"
+echo "Zip file: ${full_zip_output_path}"
+echo "Folder: ${full_folder_output_path}"
+wget "${urlname}" -P "${outputdir}"
+tar -xvjf "${full_zip_output_path}"
+rsync -av "${full_folder_output_path}" "$HOME/${bot_dir}/cogs/osu/beatmaps"
+rm "${full_zip_output_path}"
+rm -r "${full_folder_output_path}"

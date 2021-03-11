@@ -1,0 +1,12 @@
+{
+    "whitelist": {
+        "servers": [
+        ],
+        "users": [
+        ]
+    },
+    "blacklist": {
+        "servers": [],
+        "users": []
+    }
+}

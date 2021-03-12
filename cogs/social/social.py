@@ -75,42 +75,6 @@ class Social(commands.Cog):
         self.SERVER_EXP_COOLDOWN = 2 # seconds
 
 
-    @commands.command(pass_context=True, no_pm=True)
-    async def lvltransfer(self, ctx):
-        print('Starting user transfer')
-        user_id = ctx.message.author.id
-        if user_id != int(self.bot.config['owner']):
-            return
-
-        """
-        folderpath = os.path.join(os.getcwd(), 'database', 'dump')
-
-        await self.all_users.drop()
-        # users
-        users_filepath = os.path.join(folderpath, 'owo_users.json')
-
-        with open(users_filepath) as json_file:
-            user_data = json.load(json_file)
-
-        for idx, user in enumerate(user_data):
-            print(idx)
-            try:
-                try:
-                    del user['_id']
-                except:
-                    pass
-
-                if '$numberLong' in user['user_id']:
-                    user['user_id'] = str(user['user_id']['$numberLong'])
-            except:
-                print('Failed', user)
-
-            await self.all_users.insert_one(user)
-
-        print('Finished transfering users.')
-        """
-
-
     async def _get_server_settings(self, server_id):
         return await self.server_settings.find_one({"server_id":server_id})
 

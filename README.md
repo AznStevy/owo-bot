@@ -113,7 +113,7 @@ As mentioned previously, if you want to explore more stuff about the bot, use th
 # Coding FAQ
 
 ### Why are cogs mostly in a huge file and not separated?
-Writing in a single file is extremely convenient for me to apply hotfixes and reload the module. After fiddling around with `importlib` for several days, I haven't been successful in reloading files that aren't the one the cog is located in. If you have gotten this to work in Python/discord.py, then I'd love to know about it.
+Writing in a single file is extremely convenient for me to apply hotfixes and reload the module. Hotfixing and reloading are far-preferred over restarting because the bot takes about 15 minutes to log in all shards due to Discord API rate limit restrictions. After fiddling around with `importlib` for several days, I haven't been successful in reloading files that aren't the one the cog is located in. If you have gotten this to work in Python/discord.py, then I'd love to know about it.
 
 ### What is with all this spaghetti code?
 Like you, my intensions aren't to write code that is unreadable. But when things get as complex as they do with new feature requests coming in every week, you just give into the mess while trying to implement things as fast as possible. So as I said up top, this code is for no one and is not meant to be read. To me, if it works, it works. 

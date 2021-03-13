@@ -75,6 +75,42 @@ class Social(commands.Cog):
         self.SERVER_EXP_COOLDOWN = 2 # seconds
 
 
+    @commands.command(pass_context=True, no_pm=True)
+    async def lvltransfer(self, ctx):
+        print('Starting user transfer')
+        user_id = ctx.message.author.id
+        if user_id != int(self.bot.config['owner']):
+            return
+
+        """
+        folderpath = os.path.join(os.getcwd(), 'database', 'dump')
+
+        await self.all_users.drop()
+        # users
+        users_filepath = os.path.join(folderpath, 'owo_users.json')
+
+        with open(users_filepath) as json_file:
+            user_data = json.load(json_file)
+
+        for idx, user in enumerate(user_data):
+            print(idx)
+            try:
+                try:
+                    del user['_id']
+                except:
+                    pass
+
+                if '$numberLong' in user['user_id']:
+                    user['user_id'] = str(user['user_id']['$numberLong'])
+            except:
+                print('Failed', user)
+
+            await self.all_users.insert_one(user)
+
+        print('Finished transfering users.')
+        """
+
+
     async def _get_server_settings(self, server_id):
         return await self.server_settings.find_one({"server_id":server_id})
 
@@ -2689,8 +2725,8 @@ class Social(commands.Cog):
         result.save(filename,'PNG', quality=100)
         return filename
 
+
     async def _handle_on_message(self, message):
-        return
         
         # print("Message detected")
         author = message.author
@@ -2698,28 +2734,26 @@ class Social(commands.Cog):
         content = message.content
 
         try:
-            if server.id != 2903124233097052: # must remove this line eventually!!!!!!
-                return
             if author.bot:
+                #print('TEST 2')
                 return
             if str(author.id) in self.bot.blacklist['users']:
+                #print('TEST 3')
                 return
             if str(server.id) in self.bot.blacklist['servers']:
+                #print('TEST 4')
                 return
-
-            try:
-                prefixes = await self.bot.get_server_prefixes(self.bot, message, prefix_list = True)
-                first_char = content[0]
-                if first_char in prefixes:
-                    return
-            except:
-                pass
+            if any(content.startswith(x) for x in ['>','!','?','%']):
+                #print('TEST 5')
+                return
         except Exception as e:
             # print('ERROR', e)
             return
 
+        # print("Task message")
         loop = asyncio.get_event_loop()
         loop.create_task(self._task_message(message))
+
 
     async def _task_message(self, message):
         text = message.content

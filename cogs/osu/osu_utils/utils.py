@@ -242,7 +242,9 @@ def fix_mods(mods:str):
 def fix_mod_list(mods_list):
     new_mod_list = []
     if 'DT' in mods_list and 'NC' in mods_list:
-        mods_list.remove('DT')  
+        mods_list.remove('DT')
+    if 'PF' in mods_list and 'SD' in mods_list:
+        mods_list.remove('SD') 
 
     if 'HD' in mods_list and 'DT' in mods_list and 'HR' in mods_list:
         new_mod_list.extend(['HD', 'HR', 'DT'])
@@ -278,18 +280,22 @@ def num_to_mod(number):
     for mod_idx in range(len(mods)-1, -1, -1):
         mod = mods[mod_idx]
         # print(mods[mod_idx], mod_idx, 2**mod_idx)
-        """
         if mod == 'NC':
             if number >= 576:
                 number -= 576
                 mod_list.append(mod)
+                continue
         elif mod == 'PF':
             if number >= 16416:
                 number -= 16416
-                mod_list.append(mod)"""
+                mod_list.append(mod)
+                continue
+
         if number >= 2**mod_idx:
             number -= 2**mod_idx
             mod_list.append(mod)
+
+    # print('UTIL NUM2MOD', mod_list)
 
     return mod_list
 
@@ -302,14 +308,27 @@ def mod_to_num(input_mods:str):
     ]
     input_mods = input_mods.upper()
     total = 0
+
+    # remove TD first becuase it interferes with HD/DT
+    if 'TD' in input_mods:
+        total += 4
+        input_mods = input_mods.replace('TD', '')
+
     for mod_idx in range(len(mods)-1, -1, -1):
         if mods[mod_idx] in input_mods:
             if mods[mod_idx] == 'DT':
                 total += 64
             elif mods[mod_idx] == 'NC':
                 total += 576
+            elif mods[mod_idx] == 'SD':
+                total += 32
+            elif mods[mod_idx] == 'PF':
+                total += 16416
             else:
                 total += 2**mod_idx
+            input_mods = input_mods.replace(mods[mod_idx], '')
+
+    # print('UTIL MOD2NUM', total)
 
     return int(total)
 
@@ -366,10 +385,10 @@ def num_to_droid_mod(mod_num):
     # print('UTILS mod num', mod_num)
     mod_list = num_to_mod(mod_num)
     mods = [
-        'NF','EZ','HD','HR','SD','DT','RX','HT','NC','FL','AT','V2','PR'
+        'NF','EZ','HD','HR','SD','DT','RX','HT','NC','FL','AT', 'V2'
     ]
     mod_droid = [
-        'n', 'e', 'h', 'r', 'u', 'd', 'x', 't', 'c', 'i', 'a', 'v', 's'
+        'n', 'e', 'h', 'r', 'u', 'd', 'x', 't', 'c', 'i', 'a', 'v'
     ]
     droid_str = ''
     for mod in mod_list:

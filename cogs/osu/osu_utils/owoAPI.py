@@ -258,17 +258,19 @@ class owoAPI(object):
 
 
     async def get_full_beatmap_info(self, beatmap_info, 
-        mods=0, accs=[95, 99, 100], extra_info={}, use_cache=True, api='bancho'):
+        mods=0, accs=[95, 99, 100], extra_info={}, use_cache=True, 
+        force_osu_cache=False, api='bancho'):
         # calculations and append to response
         beatmap_data, bmp, file_path = await self._get_map_data(beatmap_info, 
-            accs=accs, mods=mods, extra_info=extra_info, api=api)
+            accs=accs, mods=mods, extra_info=extra_info, 
+            force_osu_cache=force_osu_cache, api=api)
         beatmap_data.update(beatmap_info) # takes server info as truth
         return beatmap_data, bmp, file_path
 
 
     async def _get_map_data(self, beatmap_info, 
         accs=[95, 99, 100], mods=0, api='bancho', 
-        extra_info={}, use_cache=True):
+        extra_info={}, use_cache=True, force_osu_cache=False):
 
         # this is a helper function
         mods = int(mods)
@@ -303,7 +305,8 @@ class owoAPI(object):
         file_path = os.path.join(os.getcwd(),'cogs','osu','beatmaps', filename)
         if mode == 0:
             if not bmap:
-                file_path = await self.download_osu_file(beatmap_info)
+                file_path = await self.download_osu_file(beatmap_info, 
+                    force_cache=force_osu_cache)
                 bmap = pyttanko.parser().map(open(file_path))
 
             if api == 'droid':
@@ -335,7 +338,7 @@ class owoAPI(object):
         return resp, bmap, file_path
 
 
-    async def download_osu_file(self, beatmap_info, use_cache=True, api='bancho'):
+    async def download_osu_file(self, beatmap_info, use_cache=True, force_cache=False, api='bancho'):
         request_name = 'download_osu_file'
 
         status = map_utils.handle_status(beatmap_info)
@@ -351,30 +354,25 @@ class owoAPI(object):
         if os.path.exists(file_path) and use_cache and self.use_cache:
             beatmap_osu_cache = await self.cache.beatmap_osu_file.get(identifiers)
 
-            if beatmap_osu_cache:
+            if beatmap_osu_cache or force_cache:
                 return beatmap_osu_cache['filepath']
-
-            # delete afterwards, temporary
-            if os.path.exists(file_path): # cache then
-                beatmap_osu_cache = {}
-                beatmap_osu_cache['status'] = status # needed for cache time
-                beatmap_osu_cache['filepath'] = file_path
-                await self.cache.beatmap_osu_file.cache(
-                    identifiers, beatmap_osu_cache)
-                return file_path
-
 
         # download the beatmap
         if status in [-2, 1, 2, 4]: # if it's ranked or graveyard, trust ripple
             viable_dl_apis = ['ripple', 'gatari', 'akatsuki', 'ezppfarm']
             beatmapset_id = beatmap_info['beatmapset_id']
             api = random.choice(viable_dl_apis)
-            print('Downloading full osz for', beatmapset_id)
-            await self.download_beatmap_osz(beatmapset_id, api=api)
 
-            if not os.path.exists(file_path): # backup
-                print('Downloading osz unsuccesful, downloading .osu to', file_path)
-                await self.download_file(url, file_path)                
+            try:
+                print('Downloading full osz for', beatmapset_id)
+                await self.download_beatmap_osz(beatmapset_id, api=api)
+
+                if not os.path.exists(file_path): # backup
+                    print('Downloading osz unsuccesful, downloading .osu to', file_path)
+                    await self.download_file(url, file_path)
+            except:
+                print('Downloading .osu to', file_path)
+                await self.download_file(url, file_path)                         
 
         else: # if wip, graveyard, etc. use ppy's server
             print('Downloading .osu to', file_path)
@@ -694,7 +692,8 @@ class owoAPI(object):
             # print('MAP INFO', map_info)
             try:
                 beatmap_info, bmap, _ = await self.get_full_beatmap_info(map_info, 
-                    extra_info={'play_info': play_info}, mods=enabled_mods)
+                    extra_info={'play_info': play_info}, mods=enabled_mods,
+                    force_osu_cache=True)
                 map_max_combo = int(bmap.max_combo())
             except:
                 continue
@@ -811,7 +810,8 @@ class owoAPI(object):
 
             # if mode == 0:
             beatmap_info, _, _ = await self.get_full_beatmap_info(map_info, 
-                extra_info={'play_info': score}, mods=enabled_mods)
+                extra_info={'play_info': score}, mods=enabled_mods,
+                force_osu_cache=True)
             # else:
                 # beatmap_info = map_info
 
@@ -3088,7 +3088,7 @@ class droidAPI():
 
     def fix_date(self, unix_time):
         date_obj = datetime.datetime.utcfromtimestamp(
-            unix_time) + datetime.timedelta(hours=6)
+            unix_time) + datetime.timedelta(hours=9)
         return date_obj.strftime('%Y-%m-%d %H:%M:%S')
 
     

@@ -210,13 +210,7 @@ class General(commands.Cog):
         +<COMMAND>
         """
 
-        """
-        since = self.bot.start_time.strftime("%Y-%m-%d %H:%M:%S")
-        passed = self.get_bot_uptime()
-        await ctx.send("**owo! (shard `{}`) has been up for: `{}` (since `{}` UTC)**".format(self.bot.shard_id, passed, since))
-        """
-
-        author_repo = "https://github.com/AznStevy"
+        author_repo = "https://github.com/AznStevy/owo-bot/"
         instant_invite = "https://discord.gg/aNKde73"
         osu_api_repo = "https://github.com/ppy/osu-api/"
         ripple = "https://ripple.moe/"
@@ -238,8 +232,9 @@ class General(commands.Cog):
 
         supported_servers = "Bancho, Ripple, Ripple RX (ripplerx), Gatari, " \
             "Akatsuki, Akatsuki RX (akatsukirx), Droid, Kawata, Ainu, Ainu RX (ainurx), " \
-            "Horizon, Horizon RX (horizonrx), Enjuu, Kurikku, Datenshi, " \
-            "EZ PP Farm (ezpp), EZ PP Farm RX (ezpprx), EZ PP Farm AP (ezppap), EZ PP Farm v2 (ezppv2)"
+            "Horizon, Horizon RX (horizonrx), Enjuu, Kurikku, Datenshi, Datenshi RX (datenshirx), " \
+            "EZ PP Farm (ezpp), EZ PP Farm RX (ezpprx), EZ PP Farm AP (ezppap), EZ PP Farm v2 (ezppv2), " \
+            "RealistikOsu (rosu), RealistikOsu RX (rosurx), RealistikOsu AP (rosuap)"
 
         uptime = self.get_bot_uptime(brief=True)
 
@@ -371,7 +366,7 @@ class General(commands.Cog):
         return await ctx.send(embed = em)
 
 
-    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(pass_context=True, no_pm=True, aliases=['support'])
     async def donate(self, ctx):
         """Support owo's development! A.k.a throw money at owo so it works better.
@@ -390,17 +385,18 @@ class General(commands.Cog):
         donor_discord_users = []
         for donor_id in donor_ids:
             user = await self.bot.fetch_user(int(donor_id))
-            if user:
+            if user and user.name != 'Stevy':
                 donor_discord_users.append('**{}**#_{}_'.format(
                     user.name, user.discriminator))
 
         # so not the same ones appearing
+        total_donors = len(donor_discord_users)
         random.shuffle(donor_discord_users)
         donor_discord_users = donor_discord_users[0:20] # truncate
 
         em.set_thumbnail(url=self.bot.user.avatar_url)
         em.add_field(
-            name='Current Supporters ({})'.format(len(donor_discord_users)), 
+            name='Current Supporters ({})'.format(total_donors), 
             value=', '.join(donor_discord_users) + ', ...')
 
         return await ctx.send(embed = em)

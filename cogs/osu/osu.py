@@ -140,13 +140,103 @@ class Osu(commands.Cog):
         option_parser.add_option('enjuu',       'enjuu',        opt_type=None, default=False)
         option_parser.add_option('kurikku',     'kurikku',      opt_type=None, default=False)
         option_parser.add_option('datenshi',    'datenshi',     opt_type=None, default=False)
+        option_parser.add_option('datenshirx',  'datenshirx',   opt_type=None, default=False)
         option_parser.add_option('ezpp',        'ezppfarm',     opt_type=None, default=False)
         option_parser.add_option('ezpprx',      'ezppfarmrx',   opt_type=None, default=False)
         option_parser.add_option('ezppap',      'ezppfarmap',   opt_type=None, default=False)
         option_parser.add_option('ezppv2',      'ezppfarmv2',   opt_type=None, default=False)
+        option_parser.add_option('rosu',        'realistik',    opt_type=None, default=False)
+        option_parser.add_option('rosurx',      'realistikrx',  opt_type=None, default=False)
+        option_parser.add_option('rosuap',      'realistikap',  opt_type=None, default=False)     
+
         outputs, options = option_parser.parse(inputs)
         return outputs, options
 
+
+    # database commands, admin only
+    """
+    @commands.command(pass_context=True, no_pm=True, hidden=True)
+    async def dbtransfer(self, ctx):
+        user_id = ctx.member.id
+        if user_id != int(self.bot.config['owner']):
+            return
+
+        folderpath = os.path.join(os.getcwd(), 'database', 'dump')
+        # await self.players.drop()
+        # users
+        users_filepath = os.path.join(
+            folderpath, 'owo_database_2_user_settings_cleaned.json')
+        with open(users_filepath) as json_file:
+            user_data = json.load(json_file)
+
+        for idx, user in enumerate(user_data):
+
+            try:
+                user['bancho_user_id'] = user['osu_user_id']
+                user['bancho_username'] = user['osu_username']
+                user['default_server'] = 'bancho'
+
+                try:
+                    del user['now_playing']
+                except:
+                    pass
+
+                try:
+                    del user['_id']
+                except:
+                    pass
+
+                if '$numberLong' in user['user_id']:
+                    user['user_id'] = str(user['user_id']['$numberLong'])
+
+                await self.players.insert_one(user)
+            except:
+                print('Failed', user)
+
+        print('Finished transfering players.')
+
+
+        # tracks
+        # await self.track.drop()
+        track_filepath = os.path.join(
+            folderpath, 'owo_database_2_track_cleaned.json')
+        with open(track_filepath) as json_file:
+            track_data = json.load(json_file)
+
+        for idx, track in enumerate(track_data):
+            try:
+                try:
+                    del track['_id']
+                except:
+                    pass
+
+                await self.track.insert_one(track)
+            except:
+                print('Failed', track)
+
+        print('Finished transfering tracks.')
+
+
+        # recommendations
+        # await self.rec_std.drop()
+        rec_filepath = os.path.join(
+            folderpath, 'owo_database_2_suggest_osu_cleaned.json')
+        with open(rec_filepath) as json_file:
+            rec_data = json.load(json_file)
+
+        for idx, rec in enumerate(rec_data):
+            # try:
+            try:
+                del rec['_id']
+            except:
+                pass
+
+            await self.rec_std.insert_one(rec)
+            # except:
+                #print('Failed', rec)
+
+        print('Finished transfering recs.')
+        """
 
     # ---------------------------------- osuset ----------------------------------------
     @commands.group(pass_context=True)
@@ -645,7 +735,7 @@ class Osu(commands.Cog):
         await self.process_user_top(ctx, username, 3)
 
 
-    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(no_pm=True, aliases = ["rs", "newplay"])
     async def recent(self, ctx, *username):
         """
@@ -685,6 +775,7 @@ class Osu(commands.Cog):
         Server (-{server name}):  <osu_servers> 
         Play index (-i): Get specific play number from all scores on map. (int)
         Image (-im): Generates score image of play. (no param)
+        No-Choke (-nc): Calculates no-choke plays for a player's scores. (no param)
         Mode (-m) or (-{mode}): 0 = std, 1 = taiko, 2 = ctb, 3 = mania. For converts. (int or tag)
         Exclusive Mods (-mx): Filter by plays with exact mods. (str)
         Search (-?): Search score by map name. Will grab first match. Quotes required. (str)
@@ -774,6 +865,7 @@ class Osu(commands.Cog):
         Server (-{server name}): <osu_servers> 
         Play index (-i): Get specific play number from all scores on map. (int)
         Image (-im): Generates score image of play. (no param)
+        No-Choke (-nc): Calculates no-choke plays for a player's scores. (no param)
         Mode (-m #) or (-{mode}): 0 = std, 1 = taiko, 2 = ctb, 3 = mania. (int or tag)
         Search (-?): Search discord chat for recently referenced beatmap. Quotes required. (str)
 
@@ -804,8 +896,12 @@ class Osu(commands.Cog):
             if not userinfo:
                 return await ctx.send(":red_circle: **`{}` does not have an account linked.**".format(user.name))
             else:
-                base_api = self.remove_api_suffix(api)
-                username = [userinfo["{}_username".format(base_api)]]
+                try:
+                    base_api = self.remove_api_suffix(api)
+                    username = [userinfo["{}_username".format(base_api)]]
+                except:
+                    return await ctx.send(":red_circle: **`{}` does not have a `{}` account linked.**".format(
+                        user.name, self.owoAPI.get_server_name(base_api)))
         else:
             username = usernames
 
@@ -1617,7 +1713,7 @@ class Osu(commands.Cog):
             option_parser.add_option('u',  'user',          opt_type=None, default=False)
             usernames, info_options = option_parser.parse(outputs)
         except:
-            await ctx.send("**Please check your inputs for errors!**")
+            return await ctx.send("**Please check your inputs for errors!**")
 
         # pings bancho server
         if api == 'bancho':
@@ -3046,7 +3142,7 @@ class Osu(commands.Cog):
             option_parser.add_option('u',       'user',         opt_type=None,      default=False)
             usernames, options = option_parser.parse(outputs)
         except:
-            await ctx.send("**Please check your inputs for errors!**")
+            return await ctx.send("**Please check your inputs for errors!**")
 
         # print(usernames, options) # **  
 
@@ -3456,9 +3552,19 @@ class Osu(commands.Cog):
         elif 'mods' in userrecent.keys():
             enabled_mods = utils.mod_to_num(''.join(userrecent['mods']))
         # print('DATA ', userrecent) # **
+        
+        if 'status' in beatmap:
+            # print('STATUS CHECK', map_utils.handle_status(beatmap) in [1, 2, -2])
+            if map_utils.handle_status(beatmap) in [1,2,4,-2]:
+                force_osu_file = True
+            else:
+                force_osu_file = False
+        else:
+            force_osu_file = True
+
         try:
             calc_info, bmp, bmp_file_path = await self.owoAPI.get_full_beatmap_info(beatmap, 
-                mods=enabled_mods, extra_info={'play_info': userrecent})
+                mods=enabled_mods, extra_info={'play_info': userrecent}, force_osu_cache=force_osu_file)
         except:
             calc_info = beatmap
             bmp, bmp_filepath = None, None
@@ -3672,7 +3778,7 @@ class Osu(commands.Cog):
             option_parser.add_option('u',   'user',         opt_type=None,      default=False)
             usernames, options = option_parser.parse(outputs)
         except:
-            await ctx.send("**Please check your inputs for errors!**")
+            return await ctx.send("**Please check your inputs for errors!**")
 
         # get rid of duplicates initially
         usernames = list(set(usernames))
@@ -3924,11 +4030,7 @@ class Osu(commands.Cog):
             best_beatmaps = []
             test_full_play_list = [] # in the event grabbing beatmaps fail. happens for droid a lot
             
-            if api == 'bancho': # temporary!!!! DELETE LATER ***** !!!!
-                use_cache = True
-            else:
-                use_cache = False
-
+            use_cache = True
             for i in range(len(filtered_full_play_list)):
                 # print(filtered_full_play_list[i].keys())
                 try:
@@ -4156,10 +4258,17 @@ class Osu(commands.Cog):
             extra_info = {}
             extra_info['play_info'] = plays[i]
             # print('test 3') # **
+
+            # only don't force cache for recent
+            if 'recent' in header_txt.lower():
+                force_osu_cache=False
+            else:
+                force_osu_cache=True
+
             try:
                 # print(beatmaps[i])
                 full_beatmap_info, bmap_raw, bmap_file_path = await self.owoAPI.get_full_beatmap_info(
-                    beatmaps[i], extra_info=extra_info, mods=mod_num)
+                    beatmaps[i], extra_info=extra_info, mods=mod_num, force_osu_cache=force_osu_cache)
             except: # if the beatmap not longer exists
                 # print(sys.exc_info())
                 continue
@@ -4201,7 +4310,9 @@ class Osu(commands.Cog):
                 (full_beatmap_info['max_combo'] is not None)) and \
                 (gamemode == 0) and \
                 (int(plays[i]['count_miss']) >= 1 or (int(plays[i]['max_combo']) <= 0.95*int(full_beatmap_info['max_combo']) and 'S' in plays[i]['rank'])):
-                choke_text += ' _({:.2f}pp for FC)_'.format(full_beatmap_info['extra_info']['fc_pp'])
+                choke_text += ' _({:.2f}pp for {:.2f}% FC)_'.format(
+                    float(full_beatmap_info['extra_info']['fc_pp']),
+                    float(full_beatmap_info['extra_info']['fc_acc']))
 
             # max combo text
             max_combo_txt = 'x{:,}/{:,}'.format(
@@ -4227,9 +4338,17 @@ class Osu(commands.Cog):
                 pp_txt = '**{:.2f}PP**{}{}'.format(float(plays[i]['pp']), 
                     droid_pp_txt, choke_text)
             elif 'extra_info' in full_beatmap_info: # otherwise calculate play pp (like for recent/failed)
+                # check if it's non-FC
                 play_pp = float(full_beatmap_info['extra_info']['play_pp'])
-                pp_txt = '**{:.2f}PP**{} (_Unofficial_)'.format(
-                    play_pp, droid_pp_txt)
+                if ('max_combo' in full_beatmap_info and full_beatmap_info['max_combo'] is not None) and \
+                    (int(plays[i]['count_miss']) >= 1 or (int(plays[i]['max_combo']) <= 0.96*int(full_beatmap_info['max_combo']) and 'S' in plays[i]['rank'])) and \
+                    (abs(play_pp - float(full_beatmap_info['extra_info']['fc_pp'])) > 3):
+                    pp_txt = '**{:.2f}PP**{}{}'.format(play_pp, 
+                        droid_pp_txt, choke_text)
+                else:
+                    pp_txt = '**{:.2f}PP**{} (_Unofficial_)'.format(
+                        play_pp, droid_pp_txt)
+
             else:
                 pp_txt = '**-PP**{} (_Unofficial_)'.format(droid_pp_txt)
 
@@ -4313,7 +4432,7 @@ class Osu(commands.Cog):
             try: # unfortunately, have to calculate this again
                 # print(beatmaps[i])
                 full_beatmap_info, bmap_raw, bmap_file_path = await self.owoAPI.get_full_beatmap_info(
-                    beatmaps[i], extra_info=extra_info, mods=mod_num)
+                    beatmaps[i], extra_info=extra_info, mods=mod_num, force_osu_cache=True)
             except: # if the beatmap not longer exists
                 # print(sys.exc_info())
                 continue
@@ -4459,11 +4578,12 @@ class Osu(commands.Cog):
             option_parser.add_option('?',   'search',       opt_type=str,       default=None)
             option_parser.add_option('i',   'index',        opt_type='range',   default=None)
             option_parser.add_option('mx',  'mods_ex',      opt_type=str,       default=None)
+            option_parser.add_option('nc',  'no_choke',     opt_type=None,      default=False)
             option_parser.add_option('im',  'image',        opt_type=None,      default=False)
             option_parser.add_option('u',   'user',         opt_type=None,      default=False)
             usernames, options = option_parser.parse(inputs)
         except:
-            await ctx.send("**Please check your inputs for errors!**")
+            return await ctx.send("**Please check your inputs for errors!**")
         # print('OPTIONS', options)
         # print('MAP SCORE USERNAMES', usernames)
 
@@ -4620,9 +4740,18 @@ class Osu(commands.Cog):
         # otherwise, return
         if userinfo and userscores:
             filtered_scores = [userscores[idx] for idx in indices]
-            msg, embeds = await self.create_user_scores_embed(
-                ctx, api, userinfo[0], filtered_scores, beatmap[0], gamemode, 
-                    indices=indices)
+            if options['no_choke']:
+                if gamemode == 0:
+                    msg, embeds = await self.create_user_no_choke_scores_embed(
+                        ctx, api, userinfo[0], filtered_scores, beatmap[0], gamemode, 
+                            indices=indices)
+                else:
+                    return await ctx.send("**The `-nc` option is currently only available for osu! standard.**")
+            else:
+                msg, embeds = await self.create_user_scores_embed(
+                    ctx, api, userinfo[0], filtered_scores, beatmap[0], gamemode, 
+                        indices=indices)
+            
             await self.bot.menu(ctx, embeds, message=msg, page=0, timeout=20)
         else:
             if options['search']:
@@ -4860,7 +4989,7 @@ class Osu(commands.Cog):
                 # beatmap pp calculation
                 bmp_calc, _, _ = await self.owoAPI.get_full_beatmap_info(best_beatmaps[i],
                     accs=[float(best_acc[i])], mods=int(userscore[i]['enabled_mods']), 
-                    extra_info=extra_info)
+                    extra_info=extra_info, force_osu_cache=True)
 
                 if gamemode == 0:
                     star_str, _ = self.compare_val_params(bmp_calc, 
@@ -4886,7 +5015,9 @@ class Osu(commands.Cog):
                 if (gamemode == 0 and bmp_calc != None and userscore[i]['count_miss'] != None and best_beatmaps[i]['max_combo']!= None) and \
                     (int(userscore[i]['count_miss'])>=1 or (int(userscore[i]['max_combo']) <= 0.95*int(best_beatmaps[i]['max_combo']) and \
                         'S' in userscore[i]['rank'])):
-                        choke_text += ' _({:.2f}pp for FC)_'.format(bmp_calc['extra_info']['fc_pp'])
+                        choke_text += ' _({:.2f}pp for {:.2f}% FC)_'.format(
+                            bmp_calc['extra_info']['fc_pp'],
+                            bmp_calc['extra_info']['fc_acc'])
                 
                 # define acc text
                 acc = float(best_acc[i])
@@ -4960,6 +5091,199 @@ class Osu(commands.Cog):
         return ("", embeds)
 
 
+    async def create_user_no_choke_scores_embed(self, ctx, api, user, userscore, beatmap, gamemode, indices=None):
+        map_id = beatmap['beatmap_id']
+
+        server_user = ctx.message.author
+        server = ctx.message.guild
+
+        profile_url = await self.owoAPI.get_user_avatar(user['user_id'], api)
+        gamemode_text = utils.get_gamemode_text(gamemode)
+
+        # get no choke plays
+        no_choke_plays = []
+        for i, play_info in enumerate(userscore):
+
+            enabled_mods = 0
+            if 'enabled_mods' in play_info:
+                enabled_mods = int(play_info['enabled_mods'])
+            elif 'mods' in play_info:
+                enabled_mods = utils.mod_to_num(''.join(play_info['mods']))
+            mods = utils.num_to_mod(enabled_mods)
+
+            # try
+            beatmap_info, bmap, _ = await self.owoAPI.get_full_beatmap_info(beatmap, 
+                extra_info={'play_info': play_info}, mods=enabled_mods, force_osu_cache=True)
+            map_max_combo = int(bmap.max_combo())
+            # except
+
+            # fill in potential gaps in original data
+            if 'accuracy' not in userscore[i] or not userscore[i]['accuracy']:
+                userscore[i]['accuracy'] = utils.calculate_acc(play_info, gamemode)
+            if 'pp' not in userscore[i] or not userscore[i]['pp']:
+                userscore[i]['pp'] = beatmap_info['extra_info']['play_pp']
+            if 'difficulty_rating' not in userscore[i]:
+                # just in case it's needed in the future
+                if gamemode == 0:
+                    star_str, _ = self.compare_val_params(beatmap_info, 
+                        "difficulty_rating", "stars_mod", precision=2, single=True)
+                else:
+                    star_str = self.adjust_val_str_mod(
+                        beatmap_info, "difficulty_rating", 
+                        int(play_info['enabled_mods']), gamemode)
+                userscore[i]['difficulty_rating'] = star_str
+
+            no_choke_play = copy.deepcopy(userscore[i])
+            no_choke_play['original_idx'] = i+1
+
+            if int(play_info['count_miss']) > 0 or \
+                (map_max_combo - int(play_info['max_combo']) > int(play_info['count_100'])) or \
+                (int(play_info['max_combo']) < map_max_combo * 0.95):
+
+                # this part is direct copy from map_utils, but still use map utils for calc
+                no_choke_play['count_300'] = int(play_info['count_300']) + \
+                    int(play_info['count_miss'])
+                no_choke_play['count_100'] = int(play_info['count_100'])
+                no_choke_play['count_50'] = int(play_info['count_50'])
+                no_choke_play['count_miss'] = 0
+                no_choke_play['max_combo'] = map_max_combo
+                no_choke_play['accuracy'] = beatmap_info['extra_info']['fc_acc']
+                no_choke_play['pp'] = beatmap_info['extra_info']['fc_pp']
+                no_choke_play['original'] = copy.deepcopy(play_info)
+                no_choke_play['rank'] = utils.calculate_rank(
+                    no_choke_play, no_choke_play['accuracy'], ''.join(mods))
+            else:
+                no_choke_play['original'] = None
+
+            no_choke_plays.append(no_choke_play)
+
+        userscore = no_choke_plays
+
+        # sort the scores based on pp, then score if no pp
+        try:
+            userscore = sorted(userscore, key=operator.itemgetter('pp'), reverse=True)
+        except:
+            userscore = sorted(userscore, key=operator.itemgetter('score'), reverse=True)
+
+        mapname = '{} [{}]'.format(
+            beatmap['title'],
+            beatmap['version'])
+
+        per_page = 3
+        embeds = []
+        # page system
+        pages = math.ceil(len(userscore)/per_page)
+        for page in range(pages):
+            em = discord.Embed(colour=server_user.colour)
+            start_ind = per_page*page
+            end_ind = per_page*page + per_page
+            if end_ind > len(userscore):
+                end_ind = len(userscore)
+            desc = ''
+            for i in range(start_ind, end_ind):
+                beatmap_url = self.owoAPI.get_beatmap_url(beatmap)
+
+                info = ''
+                mods = utils.num_to_mod(userscore[i]['enabled_mods'])
+                if not mods:
+                    mods = []
+                    mods.append('No Mod')
+
+                star_str = '{}★'.format(userscore[i]['difficulty_rating'])
+                star_str = self._fix_star_arrow(star_str)
+
+                if indices is not None:
+                    list_num = indices[i]+1
+                else:
+                    list_num = i+1
+                info += '**{} `[{}]`. `{}` Score** [{}]\n'.format(
+                    list_num, userscore[i]['original_idx'], 
+                    utils.fix_mods(''.join(mods)), star_str)
+
+                if userscore[i]['original'] is not None:
+                    droid_pp_txt = ''
+                    if api == 'droid':
+                        try:
+                            droid_extra_info = {}
+                            droid_extra_info['play_info'] = userscore[i]['original']
+                            droid_calc_info, _, _ = await self.owoAPI.get_full_beatmap_info(beatmap,
+                                mods=int(userscore[i]['enabled_mods']), 
+                                extra_info=droid_extra_info, api='droid')
+                            droid_extra_info['play_info'] = userscore[i]
+                            droid_calc_info_nc, _, _ = await self.owoAPI.get_full_beatmap_info(beatmap,
+                                mods=int(userscore[i]['enabled_mods']), 
+                                extra_info=droid_extra_info, api='droid')
+
+                            droid_pp_txt = ' | {:.2f} ➔ **{:.2f}DPP**'.format(
+                                float(droid_calc_info['extra_info']['play_pp']),
+                                float(droid_calc_info_nc['extra_info']['play_pp']))
+                        except:
+                            pass
+
+                    rank_txt = '{} ➔ {}'.format(
+                        self.RANK_EMOTES[userscore[i]['original']['rank']], 
+                        self.RANK_EMOTES[userscore[i]['rank']])
+                    # print('SCORE ', userscore[i])
+                    pp_txt = '{:.2f} ➔ **{:.2f}PP**'.format(
+                        float(userscore[i]['original']['pp']), 
+                        float(userscore[i]['pp']))
+                    acc_txt = '{:.2f}% ➔ **{:.2f}%**'.format(
+                        round(userscore[i]['original']['accuracy'], 2),
+                        round(userscore[i]['accuracy'], 2))
+                    info += '▸ {} ▸ {}{} ▸ {}\n'.format(
+                        rank_txt, pp_txt, droid_pp_txt, acc_txt)
+                    combo_denom = ''
+                    if 'max_combo' in beatmap and beatmap['max_combo'] is not None:
+                        combo_denom = '/{:,}'.format(int(beatmap['max_combo']))
+
+                    info += '▸ x{:,} ➔ **x{:,}{}** ▸ {} ➔ **{}**\n'.format(
+                        int(userscore[i]['original']['max_combo']), int(userscore[i]['max_combo']), combo_denom,
+                        self._get_score_breakdown(userscore[i]['original'], gamemode),
+                        self._get_score_breakdown(userscore[i], gamemode))
+                else:
+                    droid_pp_txt = ''
+                    if api == 'droid':
+                        try:
+                            droid_extra_info = {}
+                            droid_extra_info['play_info'] = userscore[i]['original']
+                            droid_calc_info, _, _ = await self.owoAPI.get_full_beatmap_info(beatmap,
+                                mods=int(userscore[i]['enabled_mods']), 
+                                extra_info=droid_extra_info, api='droid')
+                            droid_pp_txt = ' | {:.2f}DPP'.format(
+                                float(droid_calc_info['extra_info']['play_pp']))
+                        except:
+                            pass
+
+                    rank_txt = '{}'.format(self.RANK_EMOTES[userscore[i]['rank']])
+                    pp_txt = '{:.2f}PP'.format(float(userscore[i]['pp']))
+                    acc_txt = '{:.2f}%'.format(round(userscore[i]['accuracy'], 2))
+                    info += '▸ {} ▸ {}{} ▸ {}\n'.format(
+                        rank_txt, pp_txt, droid_pp_txt, acc_txt)
+                    combo_denom = ''
+                    if 'max_combo' in beatmap and beatmap['max_combo'] is not None:
+                        combo_denom = '/{:,}'.format(int(beatmap['max_combo']))
+
+                    info += '▸ x{:,}{} ▸ {}\n'.format(
+                        int(userscore[i]['max_combo']), combo_denom,
+                        self._get_score_breakdown(userscore[i], gamemode))
+
+                desc += info
+
+            em.description = desc
+            title = "Top {} No-Choke Play{} for {} on {}".format(
+                gamemode_text, self._plural_text(userscore), user['username'], mapname)
+            em.set_author(name = title, url=beatmap_url, icon_url=profile_url)
+            footer_addition = " | Page {} of {}".format(page + 1, pages)
+            icon_url = self.owoAPI.get_server_avatar(api)
+            em.set_footer(text = "On osu! {} Server{}".format(
+                self.owoAPI.get_server_name(api), footer_addition), icon_url=icon_url)
+            map_image_url = self.owoAPI.get_beatmap_thumbnail(beatmap)
+            em.set_thumbnail(url=map_image_url)
+            embeds.append(em)
+
+        return ("", embeds)
+
+
     def _plural_text(self, data_list):
         ret_str = ""
         if isinstance(data_list, list):
@@ -4999,24 +5323,27 @@ class Osu(commands.Cog):
         db_user = await self.get_user(user)
 
         # get options
-        options, cmd_gamemode = self._gamemode_option_parser(options) # map gamemode might not be the same
-        options, server_options = self.server_option_parser(options)
-        api = self.determine_api(server_options, db_user=db_user)
-        option_parser = OptionParser()
-        option_parser.add_option('ar',      'approach_rate',    opt_type='range',   default=None)
-        option_parser.add_option('bpm',     'bpm',              opt_type='int',     default=None)
-        option_parser.add_option('od',      'overall_diff',     opt_type='range',   default=None)
-        option_parser.add_option('pp',      'pp',               opt_type='range',   default=None)
-        option_parser.add_option('hp',      'hp',               opt_type='range',   default=None)
-        option_parser.add_option('cs',      'circle_size',      opt_type='range',   default=None)
-        option_parser.add_option('s',       'stars',            opt_type='range',   default=None)
-        option_parser.add_option('len',     'length',           opt_type='range',   default=None)
-        option_parser.add_option('st',      'status',           opt_type='int',     default=0)
-        option_parser.add_option('m',       'mode',             opt_type='int',     default=0)
-        option_parser.add_option('f',       'farm',             opt_type='int',     default=0) # 0 - 10
-        option_parser.add_option('info',    'info',             opt_type=None,      default=False) # 0 - 10
-        option_parser.add_option('g',       'graph',            opt_type=None,      default=False) # 0 - 10
-        output, options = option_parser.parse(options)
+        try:
+            options, cmd_gamemode = self._gamemode_option_parser(options) # map gamemode might not be the same
+            options, server_options = self.server_option_parser(options)
+            api = self.determine_api(server_options, db_user=db_user)
+            option_parser = OptionParser()
+            option_parser.add_option('ar',      'approach_rate',    opt_type='range',   default=None)
+            option_parser.add_option('bpm',     'bpm',              opt_type='int',     default=None)
+            option_parser.add_option('od',      'overall_diff',     opt_type='range',   default=None)
+            option_parser.add_option('pp',      'pp',               opt_type='range',   default=None)
+            option_parser.add_option('hp',      'hp',               opt_type='range',   default=None)
+            option_parser.add_option('cs',      'circle_size',      opt_type='range',   default=None)
+            option_parser.add_option('s',       'stars',            opt_type='range',   default=None)
+            option_parser.add_option('len',     'length',           opt_type='range',   default=None)
+            option_parser.add_option('st',      'status',           opt_type='int',     default=0)
+            option_parser.add_option('m',       'mode',             opt_type='int',     default=0)
+            option_parser.add_option('f',       'farm',             opt_type='int',     default=0) # 0 - 10
+            option_parser.add_option('info',    'info',             opt_type=None,      default=False) # 0 - 10
+            option_parser.add_option('g',       'graph',            opt_type=None,      default=False) # 0 - 10
+            output, options = option_parser.parse(options)
+        except:
+            return await ctx.send("**Please check your inputs for errors!**")
 
         username = await self.process_username(ctx, None) # can only recommend for yourself
 
@@ -6444,11 +6771,15 @@ class Osu(commands.Cog):
                 'http://ripple.moe/ss/',
                 'https://ripple.moe/ss/',
                 'screenshot', 'community', 'forum',
-                'https://puu.sh', 'discord',
-                '.jpg', '.png', 'users', '/u/'
+                'https://puu.sh', 'discord', 'osu-pps',
+                '.jpg', '.png', 'users', '/u/', 'wiki'
                 ]
             is_ignore = any([link in url.lower() for link in ignore_links]) # checked twice..?
             if is_ignore:
+                return
+
+            # process beatmaps only
+            if not any([x in url for x in ['/b/','/s/','beatmap']]):
                 return
 
             # print("PROCESSING BEATMAP", all_urls)
@@ -7349,7 +7680,7 @@ class Osu(commands.Cog):
             option_parser.add_option('o',   'overwrite',        opt_type=None,      default=False)
             usernames, options = option_parser.parse(options)
         except:
-            await ctx.send("**Please check your options.**")
+            return await ctx.send("**Please check your options.**")
 
         if api != "bancho":
             return ctx.send("**Tracking currently only available for `Bancho`.**")
@@ -7477,9 +7808,9 @@ class Osu(commands.Cog):
                     role_member_ids = [str(member.id) for member in role.members]
 
                     db_users = await self.players.find(
-                        {"user_id":{"$in": role_member_ids}}, {"osu_username"})
+                        {"user_id":{"$in": role_member_ids}}, {"{}_username".format(api)})
 
-                    new_usernames = [db_user["osu_username"] for db_user in db_users]
+                    new_usernames = [db_user["{}_username".format(api)] for db_user in db_users]
                     add_usernames.extend(new_usernames)
                     break
 
@@ -7496,9 +7827,9 @@ class Osu(commands.Cog):
                 # print('Role member IDs', role_member_ids)
                 db_users = []
                 async for db_user in self.players.find(
-                    {"user_id":{"$in": role_member_ids}}, {"osu_username"}):
+                    {"user_id":{"$in": role_member_ids}}, {"{}_username".format(api)}):
                     db_users.append(db_user)
-                new_usernames = [db_user["osu_username"] for db_user in db_users]
+                new_usernames = [db_user["{}_username".format(api)] for db_user in db_users]
                 add_usernames.extend(new_usernames)
             elif "<@!" in username or "<@" in username: # mentioned user
                 discord_user_id = int(username.replace('<@!','').replace('<@','').replace('>',''))
@@ -7507,7 +7838,7 @@ class Osu(commands.Cog):
                 if not db_user:
                     await ctx.send("**`{}` does not have an account linked. Use `>osuset user \"your username\"`.**".format(member.name))
                 else:
-                    add_usernames.append(db_user["osu_username"])
+                    add_usernames.append(db_user["{}_username".format(api)])
             else: # just a regular string
                 member = await ctx.guild.query_members(query=username)
                 db_user = None
@@ -7518,7 +7849,7 @@ class Osu(commands.Cog):
                 if not db_user:
                     add_usernames.append(username)
                 else:
-                    add_usernames.append(db_user["osu_username"])
+                    add_usernames.append(db_user["{}_username".format(api)])
 
         add_usernames = list(set(add_usernames))
 

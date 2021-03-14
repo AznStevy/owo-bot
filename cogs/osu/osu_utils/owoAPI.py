@@ -57,10 +57,14 @@ class owoAPI(object):
         self.enjuu_api = enjuuAPI() # enjuuAPIpeppy()
         self.kurikku_api = kurikkuAPI() # kurikkuAPIpeppy()
         self.datenshi_api = datenshiAPI()# datenshiAPIpeppy()
+        self.datenshirx_api = datenshirxAPI()
         self.ezppfarm_api = ezppfarmAPI()# ezppfarmAPIpeppy()
         self.ezppfarmrx_api = ezppfarmrxAPI()
         self.ezppfarmap_api = ezppfarmapAPI()
         self.ezppfarmv2_api = ezppfarmv2API()
+        self.realistik_api = realistikAPI() # realistikAPIpeppy()
+        self.realistikrx_api = realistikrxAPI()
+        self.realistikap_api = realistikapAPI()
 
         """
         self.gatari_api = gatariAPI()
@@ -103,20 +107,22 @@ class owoAPI(object):
     def get_api_usage(self):
         return self.request_counter
 
-    # --------------- api -------------------------
 
+    # --------------- api -------------------------
     async def get_beatmap(self, beatmap_id, mods=0, 
         api='bancho', converted=0, since=None, use_cache=True):
         request_name = 'get_beatmap'
 
+        clean_api = self.remove_api_suffix(api)
         # check cache for beatmap
         identifiers = {
             'beatmap_id': str(beatmap_id),
-            'api': str(api),
+            'api': str(clean_api),
             'mods': int(mods)
         }
-        
+
         if use_cache and self.use_cache and since is None:
+            # print("Attempting to find cache.")
             beatmap_info = await self.cache.beatmap.get(identifiers)
             # print(beatmap_info)
             if beatmap_info is not None:
@@ -124,6 +130,7 @@ class owoAPI(object):
                     await self.map_search_upsert(beatmap_info)
                 # print('Using get_beatmap cache.')
                 return [beatmap_info]
+
             # print('get_beatmap cache not found.')
         
         # otherwise get from api
@@ -192,9 +199,11 @@ class owoAPI(object):
     async def get_beatmapset(self, set_id, mods=0, 
         api='bancho', converted=0, hash_id=None, use_cache=True):
         request_name = 'get_beatmapset'
+
+        clean_api = self.remove_api_suffix(api)
         identifiers = {
             'beatmapset_id': str(set_id),
-            'api': str(api),
+            'api': str(clean_api),
         }
 
         if use_cache and self.use_cache:
@@ -351,11 +360,17 @@ class owoAPI(object):
 
         identifiers = {'beatmap_id': str(beatmap_id)}
 
-        if os.path.exists(file_path) and use_cache and self.use_cache:
-            beatmap_osu_cache = await self.cache.beatmap_osu_file.get(identifiers)
+        try:
+            if os.path.exists(file_path) and use_cache and self.use_cache:
+                beatmap_osu_cache = await self.cache.beatmap_osu_file.get(identifiers)
 
-            if beatmap_osu_cache or force_cache:
-                return beatmap_osu_cache['filepath']
+                if beatmap_osu_cache:
+                    return beatmap_osu_cache['filepath']
+
+                if force_cache or api != 'bancho':
+                    return file_path
+        except:
+            pass
 
         # download the beatmap
         if status in [-2, 1, 2, 4]: # if it's ranked or graveyard, trust ripple
@@ -479,6 +494,7 @@ class owoAPI(object):
             if user_score_info is not None:
                 return user_score_info
 
+        api_obj = self.get_api(api)
         if api == 'bancho':
             resp = await self.official_api.get_scores(beatmap_id, user_id, mode)
         elif api == 'droid':
@@ -486,9 +502,10 @@ class owoAPI(object):
         elif api == 'gatari':
             resp = await self.gatari_api.get_scores(user_id, beatmap_id)            
         elif 'ezpp' in api:
+            resp = await api_obj.get_scores(beatmap_id, user_id, mode)
+        elif 'datenshi' in api:
             resp = await api_obj.get_scores(beatmap_id, user_id, mode)            
         else:
-            api_obj = self.get_api(api)
             resp = await api_obj.ppy_api.get_scores(beatmap_id, user_id, mode)
             # resp = await api_obj.get_scores(beatmap_id, user_id, mode)
 
@@ -666,6 +683,7 @@ class owoAPI(object):
             await self.cache.user_nc_best.cache(identifiers, resp) 
 
         return resp
+
 
     async def _process_no_choke(self, play_list, mode=0, api='bancho'):
         # will output in same format as user_best, but no choke with "original" field.
@@ -850,7 +868,6 @@ class owoAPI(object):
                 stats_list['bpm'].append(beatmap_info['bpm'])
 
         return stats_list
-
 
 
     async def get_user_recent(self, user_id, 
@@ -1125,12 +1142,19 @@ class owoAPI(object):
             return self.ainurx_api
         elif 'horizonrx' in api_name.lower():
             return self.horizonrx_api
+        elif 'datenshirx' in api_name.lower():
+            return self.datenshirx_api
         elif 'ezppfarmrx' in api_name.lower():
             return self.ezppfarmrx_api
         elif 'ezppfarmap' in api_name.lower():
             return self.ezppfarmap_api
         elif 'ezppfarmv2' in api_name.lower():
             return self.ezppfarmv2_api
+        elif 'realistikrx' in api_name.lower():
+            return self.realistikrx_api
+        elif 'realistikap' in api_name.lower():
+            return self.realistikap_api
+
 
         elif 'gatari' in api_name.lower():
             return self.gatari_api
@@ -1154,6 +1178,8 @@ class owoAPI(object):
             return self.datenshi_api
         elif 'ezppfarm' in api_name.lower():
             return self.ezppfarm_api
+        elif 'realistik' in api_name.lower():
+            return self.realistik_api
         elif 'official_v2' in api_name.lower():
             return self.official_api_v2
         elif 'bancho' in api_name.lower():
@@ -1180,6 +1206,10 @@ class owoAPI(object):
 
         return api_list
 
+
+    def remove_api_suffix(self, api_name):
+        cleaned_api = api_name.replace('rx', '').replace('ap', '').replace('v2', '')
+        return cleaned_api
 
     async def download_file(self, uri, path):
         print(uri)
@@ -2746,6 +2776,27 @@ class datenshiAPI(rippleAPI):
         self.ppy_api = datenshiAPIpeppy()
 
 
+class datenshirxAPI(rippleAPI):
+    def __init__(self):
+        super().__init__()
+        self.name = "Datenshi RX"
+        self.base = "https://osu.troke.id/api/v1/{}&smode=1"
+        self.symbol_url = "https://i.imgur.com/Dk8LCXw.png"
+        self.user_url_base = 'https://osu.troke.id/u/{}'
+        self.avatar_url = 'https://a.troke.id/{}'
+        self.beatmap_download = 'https://osu.troke.id/d/{}?novideo'
+        self.websocket = 'wss://osu.troke.id/api/v1/ws'
+        self.ppy_api = None
+
+
+    async def get_user(self, user_id, mode=0):
+        uri_base = 'users/rxfull?'
+        resp = await super().get_user(user_id, 
+            mode=mode, alt_uri_base=uri_base)
+        
+        return resp
+
+
 class datenshiAPIpeppy(officialAPIv1):
     def __init__(self):
         super().__init__()
@@ -2923,6 +2974,73 @@ class ezppfarmAPIpeppy(officialAPIv1):
         self.avatar_url = 'https://a.ez-pp.farm/{}'
         self.beatmap_download = 'https://ez-pp.farm/d/{}?novideo'
         self.websocket = 'wss://ez-pp.farm/api/v1/ws'
+
+
+class realistikAPI(rippleAPI):
+    def __init__(self):
+        super().__init__()
+        self.name = "Realistik"
+        self.base = "https://ussr.pl/api/v1/{}"
+        self.symbol_url = "https://i.imgur.com/Tu7oo8A.png"
+        self.user_url_base = 'https://ussr.pl/u/{}'
+        self.avatar_url = 'https://a.ussr.pl/{}'
+        self.beatmap_download = 'https://ussr.pl/d/{}?novideo'
+        self.websocket = 'wss://ussr.pl/api/v1/ws'
+        self.ppy_api = realistikAPIpeppy()
+
+
+class realistikrxAPI(rippleAPI):
+    def __init__(self):
+        super().__init__()
+        self.name = "Realistik RX"
+        self.base = "https://ussr.pl/api/v1/{}&rx=1"
+        self.symbol_url = "https://i.imgur.com/Tu7oo8A.png"
+        self.user_url_base = 'https://ussr.pl/u/{}'
+        self.avatar_url = 'https://a.ussr.pl/{}'
+        self.beatmap_download = 'https://ussr.pl/d/{}?novideo'
+        self.websocket = 'wss://ussr.pl/api/v1/ws'
+        self.ppy_api = None
+
+
+    async def get_user(self, user_id, mode=0):
+        uri_base = 'users/rxfull?'
+        resp = await super().get_user(user_id, 
+            mode=mode, alt_uri_base=uri_base)
+        
+        return resp
+
+
+class realistikapAPI(rippleAPI):
+    def __init__(self):
+        super().__init__()
+        self.name = "Realistik AP"
+        self.base = "https://ussr.pl/api/v1/{}&rx=2"
+        self.symbol_url = "https://i.imgur.com/Tu7oo8A.png"
+        self.user_url_base = 'https://ussr.pl/u/{}'
+        self.avatar_url = 'https://a.ussr.pl/{}'
+        self.beatmap_download = 'https://ussr.pl/d/{}?novideo'
+        self.websocket = 'wss://ussr.pl/api/v1/ws'
+        self.ppy_api = None
+
+
+    async def get_user(self, user_id, mode=0):
+        uri_base = 'users/apfull?'
+        resp = await super().get_user(user_id, 
+            mode=mode, alt_uri_base=uri_base)
+        
+        return resp
+
+
+class realistikAPIpeppy(officialAPIv1):
+    def __init__(self):
+        super().__init__()
+        self.name = "Realistik"
+        self.base = "https://ussr.pl/api/{}"
+        self.symbol_url = "https://i.imgur.com/Tu7oo8A.png"
+        self.user_url_base = 'https://ussr.pl/u/{}'
+        self.avatar_url = 'https://a.ussr.pl/{}'
+        self.beatmap_download = 'https://ussr.pl/d/{}?novideo'
+        self.websocket = 'wss://ussr.pl/api/v1/ws'
 
 
 class droidAPI():
@@ -3231,7 +3349,7 @@ def value_cleanup(obj_list, key_name, value_mapping):
 
 
 async def fetch(uri, session=None, timeout=20):
-    # print(uri)
+    print(uri)
     timeout = aiohttp.ClientTimeout(total=timeout)
     if not session:
         async with aiohttp.ClientSession() as session:

@@ -44,7 +44,7 @@ class General(commands.Cog):
         print('Whitelist/blacklist updated.')
         """
 
-    @commands.cooldown(1, 2, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(pass_context=True, name='help', aliases = ["h"])
     async def help(self, ctx, *, command = None):
         """Get a full command list or get info on a certain command.
@@ -97,8 +97,10 @@ class General(commands.Cog):
                         count += 1
                     desc += "\n"
 
+            desc += '**For more details on a specific command:** `>help (command)`'
+
             em.description = desc
-            em.set_footer(text = "Join the owo! Official server: https://discord.gg/aNKde73 | Website: http://owo-bot.xyz/")
+            em.set_footer(text = "Official Discord Server: https://discord.gg/aNKde73 | Website: http://owo-bot.xyz/")
             await ctx.send(embed=em)
         else:
             try:
@@ -209,7 +211,7 @@ class General(commands.Cog):
         [Example]
         +<COMMAND>
         """
-
+        website = "http://owo-bot.xyz/"
         author_repo = "https://github.com/AznStevy/owo-bot/"
         instant_invite = "https://discord.gg/aNKde73"
         osu_api_repo = "https://github.com/ppy/osu-api/"
@@ -226,15 +228,15 @@ class General(commands.Cog):
             pyttanko.__version__, pyttanko_repo)
         osu_web = "https://osu.ppy.sh/"
 
-        about = "This is owo!, a discord bot created by [Stevy]({}) and made primarily " \
+        about = "This is [owo!]({}), a discord bot created by [Stevy]({}) and made primarily " \
             "for [osu!]({}). To find out more, join the bot server today!: https://discord.gg/aNKde73\n\n" \
-            "".format(author_repo, osu_web)
+            "".format(website, author_repo, osu_web)
 
-        supported_servers = "Bancho, Ripple, Ripple RX (ripplerx), Gatari, " \
-            "Akatsuki, Akatsuki RX (akatsukirx), Droid, Kawata, Ainu, Ainu RX (ainurx), " \
-            "Horizon, Horizon RX (horizonrx), Enjuu, Kurikku, Datenshi, Datenshi RX (datenshirx), " \
-            "EZ PP Farm (ezpp), EZ PP Farm RX (ezpprx), EZ PP Farm AP (ezppap), EZ PP Farm v2 (ezppv2), " \
-            "RealistikOsu (rosu), RealistikOsu RX (rosurx), RealistikOsu AP (rosuap)"
+        supported_servers = "Bancho, Ripple (ripple, ripplerx), Gatari, " \
+            "Akatsuki (akatsuki, akatsukirx), Droid, Kawata, Ainu (ainu, ainurx), " \
+            "Horizon (horizon, horizonrx), Enjuu, Kurikku, Datenshi (datenshi, datenshirx), " \
+            "EZ PP Farm (ezpp, ezpprx, ezppap, ezppv2), " \
+            "RealistikOsu (rosu, rosurx, rosuap)"
 
         uptime = self.get_bot_uptime(brief=True)
 

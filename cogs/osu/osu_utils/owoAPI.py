@@ -2987,9 +2987,35 @@ class realistikAPI(rippleAPI):
         self.beatmap_download = 'https://ussr.pl/d/{}?novideo'
         self.websocket = 'wss://ussr.pl/api/v1/ws'
         self.ppy_api = realistikAPIpeppy()
+    
+    async def get_user_obj(self, user_id, mode: int = 0, sub_mode: str = "vn"):
+        """Creates a user object from data sent by the RealistikOsu api."""
+
+        uri_builder = URIBuilder("users/full")
+
+        uri_builder.add_parameter("id" if str(user_id).isnumeric() else "name", user_id)
+
+        resp = await fetch(self.base.format(uri_builder.uri))
+
+        if resp["code"] != 200: return
+
+        user_obj = {}
+
+        for key, val in resp.items():
+            if key == "stats": continue
+            user_obj[key] = val
+        
+        # Stats are a special case
+        mode_text = utils.num_to_mode(mode)
+        user_obj |= (resp["stats"][sub_mode][mode_text])
+
+        return user_obj
+    
+    async def get_user(self, user_id, mode=0):
+        return await self.get_user_obj(user_id, mode, "vn")
 
 
-class realistikrxAPI(rippleAPI):
+class realistikrxAPI(realistikAPI):
     def __init__(self):
         super().__init__()
         self.name = "Realistik RX"
@@ -3003,14 +3029,10 @@ class realistikrxAPI(rippleAPI):
 
 
     async def get_user(self, user_id, mode=0):
-        uri_base = 'users/rxfull?'
-        resp = await super().get_user(user_id, 
-            mode=mode, alt_uri_base=uri_base)
-        
-        return resp
+        return await self.get_user_obj(user_id, mode, "rx")
 
 
-class realistikapAPI(rippleAPI):
+class realistikapAPI(realistikAPI):
     def __init__(self):
         super().__init__()
         self.name = "Realistik AP"
@@ -3024,11 +3046,7 @@ class realistikapAPI(rippleAPI):
 
 
     async def get_user(self, user_id, mode=0):
-        uri_base = 'users/apfull?'
-        resp = await super().get_user(user_id, 
-            mode=mode, alt_uri_base=uri_base)
-        
-        return resp
+        return await self.get_user_obj(user_id, mode, "ap")
 
 
 class realistikAPIpeppy(officialAPIv1):

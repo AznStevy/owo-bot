@@ -2991,7 +2991,7 @@ class realistikAPI(rippleAPI):
     async def get_user_obj(self, user_id, mode: int = 0, sub_mode: str = "vn"):
         """Creates a user object from data sent by the RealistikOsu api."""
 
-        uri_builder = URIBuilder("users/full")
+        uri_builder = URIBuilder("users/full?")
 
         uri_builder.add_parameter("id" if str(user_id).isnumeric() else "name", user_id)
 

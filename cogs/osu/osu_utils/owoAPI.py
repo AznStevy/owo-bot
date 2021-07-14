@@ -3007,7 +3007,9 @@ class realistikAPI(rippleAPI):
         
         # Stats are a special case
         mode_text = utils.num_to_mode(mode)
-        user_obj |= (resp["stats"][sub_mode][mode_text])
+        user_obj.update(resp["stats"][sub_mode][mode_text])
+
+        user_obj = key_cleanup((user_obj,), self.key_mapping, "get_user")
 
         return user_obj
     

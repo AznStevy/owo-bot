@@ -7623,7 +7623,7 @@ class Osu(commands.Cog):
     @osutrack.command(name="add", no_pm=True)
     async def track_add(self, ctx, *usernames):
         """
-        Adds a player to track for top scores. Tracking by country only counts by # plyarers. x = not implemented yet.
+        Adds a player to track for top scores. Tracking by country only counts by # players. x = not implemented yet.
 
         [Options]
         usernames: Username of the player. Also works for roles

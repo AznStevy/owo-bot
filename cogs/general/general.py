@@ -233,7 +233,7 @@ class General(commands.Cog):
             "".format(website, author_repo, osu_web)
 
         supported_servers = "Bancho, Ripple (ripple, ripplerx), Gatari, " \
-            "Akatsuki (akatsuki, akatsukirx), Droid, Kawata, Ainu (ainu, ainurx), " \
+            "Akatsuki (akatsuki, akatsukirx), Droid, Kawata, Rina (rina, rinarx), " \
             "Horizon (horizon, horizonrx), Enjuu, Kurikku, Datenshi (datenshi, datenshirx), " \
             "EZ PP Farm (ezpp, ezpprx, ezppap, ezppv2), " \
             "RealistikOsu (rosu, rosurx, rosuap)"

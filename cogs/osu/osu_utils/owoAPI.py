@@ -50,8 +50,8 @@ class owoAPI(object):
         self.akatsukirx_api = akatsukirxAPI()
         self.droid_api = droidAPI(droid_api_key)
         self.kawata_api = kawataAPI() # kawataAPIpeppy()
-        self.ainu_api = ainuAPI() # ainuAPIpeppy()
-        self.ainurx_api = ainurxAPI()
+        self.rina_api = rinaAPI() # rinaAPIpeppy()
+        self.rinarx_api = rinarxAPI()
         self.horizon_api = horizonAPI()# horizonAPIpeppy()
         self.horizonrx_api = horizonrxAPI()
         self.enjuu_api = enjuuAPI() # enjuuAPIpeppy()
@@ -71,7 +71,7 @@ class owoAPI(object):
         self.akatuski_api = akatsukiAPI()
         self.ripple_api = rippleAPI()
         self.kawata_api = kawataAPI()
-        self.aniu_api = aniuAPI()
+        self.rina_api = rinaAPI()
         self.droid_api = droidAPI()"""
 
         # other services
@@ -1074,8 +1074,8 @@ class owoAPI(object):
             return "horizon"
         elif self.kawata_api.base in url:
             return "kawata"
-        elif self.ainu_api.base in url:
-            return "ainu"
+        elif self.rina_api.base in url:
+            return "rina"
         elif self.enjuu_api.base in url:
             return "enjuu"
         elif self.kurikku_api.base in url:
@@ -1138,8 +1138,8 @@ class owoAPI(object):
             return self.ripplerx_api
         elif 'akatsukirx' in api_name.lower():
             return self.akatsukirx_api
-        elif 'ainurx' in api_name.lower():
-            return self.ainurx_api
+        elif 'rinarx' in api_name.lower():
+            return self.rinarx_api
         elif 'horizonrx' in api_name.lower():
             return self.horizonrx_api
         elif 'datenshirx' in api_name.lower():
@@ -1164,8 +1164,8 @@ class owoAPI(object):
             return self.akatsuki_api
         elif 'kawata' in api_name.lower():
             return self.kawata_api
-        elif 'ainu' in api_name.lower():
-            return self.ainu_api
+        elif 'rina' in api_name.lower():
+            return self.rina_api
         elif 'droid' in api_name.lower():
             return self.droid_api
         elif 'horizon' in api_name.lower():
@@ -1194,7 +1194,7 @@ class owoAPI(object):
         api_list.append('ripple')
         api_list.append('akatsuki')
         api_list.append('kawata')
-        api_list.append('ainu')
+        api_list.append('rina')
         api_list.append('droid')
         api_list.append('horizon')
         api_list.append('enjuu')
@@ -2641,38 +2641,38 @@ class kawataAPIpeppy(officialAPIv1):
         self.websocket = 'wss://kawata.pw/api/v1/ws'
 
 
-class ainuAPI(rippleAPI):
+class rinaAPI(rippleAPI):
     def __init__(self):
         super().__init__()
-        self.name = "Ainu"
-        self.base = "https://ainu.pw/api/v1/{}"
+        self.name = "Rina"
+        self.base = "https://rina.place/api/v1/{}"
         self.symbol_url = "https://i.imgur.com/mGeqkfA.png"
-        self.user_url_base = 'https://ainu.pw/u/{}'
-        self.avatar_url = 'https://a.ainu.pw/{}'
+        self.user_url_base = 'https://rina.place/u/{}'
+        self.avatar_url = 'https://a.rina.place/{}'
         self.beatmap_download = None
         self.websocket = None
-        self.ppy_api = ainuAPIpeppy()
+        self.ppy_api = rinaAPIpeppy()
 
 
-class ainurxAPI(rippleAPI):
+class rinarxAPI(rippleAPI):
     def __init__(self):
-        self.name = "Ainu RX"
-        self.base = 'https://ainu.pw/api/v1/{}&rx=1'
+        self.name = "Rina RX"
+        self.base = 'https://rina.place/api/v1/{}&rx=1'
         self.symbol_url = "https://i.imgur.com/mGeqkfA.png"
-        self.user_url_base = 'https://ainu.pw/u/{}'
-        self.avatar_url = 'https://a.ainu.pw/{}'
+        self.user_url_base = 'https://rina.place/rx/u/{}'
+        self.avatar_url = 'https://a.rina.place/{}'
         self.beatmap_download = None
         self.websocket = None
 
 
-class ainuAPIpeppy(officialAPIv1):
+class rinaAPIpeppy(officialAPIv1):
     def __init__(self):
         super().__init__()
-        self.name = "Aniu"
-        self.base = "https://ainu.pw/api/{}"
+        self.name = "Rina"
+        self.base = "https://rina.place/api/{}"
         self.symbol_url = "https://i.imgur.com/mGeqkfA.png"
-        self.user_url_base = 'https://ainu.pw/u/{}'
-        self.avatar_url = 'https://a.ainu.pw/{}'
+        self.user_url_base = 'https://rina.place/u/{}'
+        self.avatar_url = 'https://a.rina.place/{}'
         self.beatmap_download = None
         self.websocket = None
 

@@ -133,8 +133,8 @@ class Osu(commands.Cog):
         option_parser.add_option('akatsukirx',  'akatsukirx',   opt_type=None, default=False)
         option_parser.add_option('droid',       'droid',        opt_type=None, default=False)
         option_parser.add_option('kawata',      'kawata',       opt_type=None, default=False)
-        option_parser.add_option('ainu',        'ainu',         opt_type=None, default=False)
-        option_parser.add_option('ainurx',      'ainurx',       opt_type=None, default=False)
+        option_parser.add_option('rina',        'rina',         opt_type=None, default=False)
+        option_parser.add_option('rinarx',      'rinarx',       opt_type=None, default=False)
         option_parser.add_option('horizon',     'horizon',      opt_type=None, default=False)
         option_parser.add_option('horizonrx',   'horizonrx',    opt_type=None, default=False)
         option_parser.add_option('enjuu',       'enjuu',        opt_type=None, default=False)
@@ -6156,7 +6156,7 @@ class Osu(commands.Cog):
     def find_osu_urls(self, msg):
         all_urls = []
         get_urls = re.findall("((https|http):\/\/" \
-            "(osu|puu|gatari|akatsuki|ripple|kawata|ainu|horizon|dgsrz|enjuu|kurikku|troke|ez-pp)" \
+            "(osu|puu|gatari|akatsuki|ripple|kawata|rina|horizon|dgsrz|enjuu|kurikku|troke|ez-pp)" \
             "[^\s]+)([ ]\+[A-Za-z][^\s]+)?", msg)
 
         for url, _, _, mods in get_urls:
